@@ -6,7 +6,7 @@
 /*   By: gufestin <gufestin@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/11 11:02:24 by gufestin          #+#    #+#             */
-/*   Updated: 2022/05/27 19:11:12 by gufestin         ###   ########.fr       */
+/*   Updated: 2022/05/27 19:52:17 by gufestin         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,8 +24,10 @@ static void	first_child(int pipefd[2], const char *argv[], char **envp)
 	ft_execve(argv[2], envp);
 }
 
-static void	second_child(int outfile, const char *argv[], char **envp)
+static void	second_child(int pipefd[2],
+		int outfile, const char *argv[], char **envp)
 {
+	close(pipefd[1]);
 	if (dup2(outfile, STDOUT_FILENO) == -1)
 	{
 		perror("dup2");
@@ -35,7 +37,7 @@ static void	second_child(int outfile, const char *argv[], char **envp)
 	ft_execve(argv[3], envp);
 }
 
-static void	ft_other(int pipefd[2])
+static void	ft_parent(int pipefd[2])
 {
 	close(pipefd[1]);
 	if (dup2(pipefd[0], STDIN_FILENO) == -1)
@@ -65,7 +67,7 @@ void	pipex(int outfile, const char *argv[], char **envp, int i)
 	if (child == 0 && i == 0)
 		first_child(pipefd, argv, envp);
 	else if (child == 0 && i == 1)
-		second_child(outfile, argv, envp);
+		second_child(pipefd, outfile, argv, envp);
 	else
-		ft_other(pipefd);
+		ft_parent(pipefd);
 }
